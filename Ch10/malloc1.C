@@ -18,3 +18,4 @@ void BM_malloc_free(benchmark::State& state) {
 BENCHMARK(BM_malloc_free)->RangeMultiplier(2)->Range(32, 256);
 
 BENCHMARK_MAIN();
+
