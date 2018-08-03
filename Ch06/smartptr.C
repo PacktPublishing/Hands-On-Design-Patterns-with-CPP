@@ -1,0 +1,1 @@
+BENCHMARK_MAIN();
