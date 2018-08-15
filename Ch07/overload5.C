@@ -8,7 +8,10 @@ int main() {
     f(5, 5);
     int i;
     f(5, &i);
+    // This compiles but uses the ... overload
+    // template deduction fails because 5l deduces T as long, &i deduces T as int
     f(5l, &i);
     f<int>(5l, &i);
+    // This forces the template overload, but does not compile because &i is int*
     f<long>(5l, &i);
 }
