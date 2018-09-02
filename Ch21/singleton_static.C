@@ -13,27 +13,20 @@
 
 class Singleton {
     public:
-    static Singleton& instance() {
-        return instance_;
-    }
-
+    Singleton() {}
     int& get() { return value_; }
 
     private:
-    Singleton() : value_(0) { std::cout << "Singleton::Singleton()" << std::endl; }
-    ~Singleton() { std::cout << "Singleton::~Singleton()" << std::endl; }
     Singleton(const Singleton&) = delete;
     Singleton& operator=(const Singleton&) = delete;
 
     private:
-    static Singleton instance_;
-    int value_;
+    static int value_;
 };
-Singleton Singleton::instance_;
+int Singleton::value_ = 0;
 
 void BM_singleton(benchmark::State& state) {
-    //Singleton S; // Does not compile - cannot create another one
-    Singleton& S = Singleton::instance();
+    Singleton S;
     for (auto _ : state) {
         REPEAT(benchmark::DoNotOptimize(++S.get());)
     }
@@ -42,7 +35,7 @@ void BM_singleton(benchmark::State& state) {
 
 void BM_singletons(benchmark::State& state) {
     for (auto _ : state) {
-        REPEAT(benchmark::DoNotOptimize(++Singleton::instance().get());)
+        REPEAT(benchmark::DoNotOptimize(++Singleton().get());)
     }
     state.SetItemsProcessed(32*state.iterations());
 }
