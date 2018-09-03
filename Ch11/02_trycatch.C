@@ -43,22 +43,13 @@ class Index {
 int main() {
     Storage S;
     Index I;
-    class StorageGuard {
-        public:
-        StorageGuard(Storage& S) : S_(S), commit_(false) {}
-        ~StorageGuard() { if (!commit_) S_.undo(); }
-        void commit() noexcept { commit_ = true; }
-        private:
-        Storage& S_;
-        bool commit_;
-        StorageGuard(const StorageGuard&) = delete;
-        StorageGuard& operator=(const StorageGuard&) = delete;
-    };
     try {
         S.insert(42, SUCCESS);
-        StorageGuard SG(S);
-        I.insert(42, FAIL_THROW);
-        SG.commit();
+        try {
+            I.insert(42, FAIL_THROW);
+        } catch (...) {
+            S.undo();
+        }
     } catch (...) {
     }
 

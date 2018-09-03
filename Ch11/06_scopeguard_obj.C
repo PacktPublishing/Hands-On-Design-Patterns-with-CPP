@@ -40,23 +40,43 @@ class Index {
     int i1_;
 };
 
+class ScopeGuardImplBase {
+    public:
+    ScopeGuardImplBase() : commit_(false) {}
+    void commit() const noexcept { commit_ = true; }
+
+    protected:
+    ScopeGuardImplBase(ScopeGuardImplBase&& other) : commit_(other.commit_) { other.commit(); }
+    ~ScopeGuardImplBase() {}
+    mutable bool commit_;
+
+    private:
+    ScopeGuardImplBase& operator=(const ScopeGuardImplBase&) = delete;
+};
+typedef const ScopeGuardImplBase& ScopeGuard;
+
+template <typename MemFunc, typename Obj>
+class ScopeGuardImpl : public ScopeGuardImplBase {
+    public:
+    ScopeGuardImpl(const MemFunc& memfunc, Obj& obj) : memfunc_(memfunc), obj_(obj) {}
+    ~ScopeGuardImpl() { if (!commit_) (obj_.*memfunc_)(); }
+    ScopeGuardImpl(ScopeGuardImpl&& other) : ScopeGuardImplBase(std::move(other)), memfunc_(other.memfunc_), obj_(other.obj_) {}
+    private:
+    const MemFunc& memfunc_;
+    Obj& obj_;
+};
+
+template <typename MemFunc, typename Obj>
+ScopeGuardImpl<MemFunc, Obj> MakeGuard(const MemFunc& memfunc, Obj& obj) {
+    return ScopeGuardImpl<MemFunc, Obj>(memfunc, obj);
+}
+
 int main() {
     Storage S;
     Index I;
-    class StorageGuard {
-        public:
-        StorageGuard(Storage& S) : S_(S), commit_(false) {}
-        ~StorageGuard() { if (!commit_) S_.undo(); }
-        void commit() noexcept { commit_ = true; }
-        private:
-        Storage& S_;
-        bool commit_;
-        StorageGuard(const StorageGuard&) = delete;
-        StorageGuard& operator=(const StorageGuard&) = delete;
-    };
     try {
         S.insert(42, SUCCESS);
-        StorageGuard SG(S);
+        ScopeGuard SG = MakeGuard(&Storage::undo, S);
         I.insert(42, FAIL_THROW);
         SG.commit();
     } catch (...) {

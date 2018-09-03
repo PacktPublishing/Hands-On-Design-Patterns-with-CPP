@@ -20,6 +20,7 @@ class Storage {
     int i_;
     int i1_;
 };
+void undo(Storage& S) { S.undo(); }
 
 // Demo memory index, does nothing useful but may throw exception.
 class Index {
@@ -40,23 +41,42 @@ class Index {
     int i1_;
 };
 
+class ScopeGuardImplBase {
+    public:
+    ScopeGuardImplBase() : commit_(false) {}
+    void commit() const noexcept { commit_ = true; }
+
+    protected:
+    ScopeGuardImplBase(const ScopeGuardImplBase& other) : commit_(other.commit_) { other.commit(); }
+    ~ScopeGuardImplBase() {}
+    mutable bool commit_;
+
+    private:
+    ScopeGuardImplBase& operator=(const ScopeGuardImplBase&) = delete;
+};
+typedef const ScopeGuardImplBase& ScopeGuard;
+
+template <typename Func, typename Arg>
+class ScopeGuardImpl : public ScopeGuardImplBase {
+    public:
+    ScopeGuardImpl(const Func& func, Arg& arg) : func_(func), arg_(arg) {}
+    ~ScopeGuardImpl() { if (!commit_) func_(arg_); }
+    private:
+    const Func& func_;
+    Arg& arg_;
+};
+
+template <typename Func, typename Arg>
+ScopeGuardImpl<Func, Arg> MakeGuard(const Func& func, Arg& arg) {
+    return ScopeGuardImpl<Func, Arg>(func, arg);
+}
+
 int main() {
     Storage S;
     Index I;
-    class StorageGuard {
-        public:
-        StorageGuard(Storage& S) : S_(S), commit_(false) {}
-        ~StorageGuard() { if (!commit_) S_.undo(); }
-        void commit() noexcept { commit_ = true; }
-        private:
-        Storage& S_;
-        bool commit_;
-        StorageGuard(const StorageGuard&) = delete;
-        StorageGuard& operator=(const StorageGuard&) = delete;
-    };
     try {
         S.insert(42, SUCCESS);
-        StorageGuard SG(S);
+        ScopeGuard SG = MakeGuard(undo, S);
         I.insert(42, FAIL_THROW);
         SG.commit();
     } catch (...) {

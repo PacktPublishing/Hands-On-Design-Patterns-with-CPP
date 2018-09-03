@@ -1,3 +1,4 @@
+#include <functional>
 #include <iostream>
 
 enum Outcome { SUCCESS, FAIL_RETURN, FAIL_THROW };
@@ -40,23 +41,25 @@ class Index {
     int i1_;
 };
 
+class ScopeGuard {
+    public:
+    template <typename Func> ScopeGuard(Func&& func) : commit_(false), func_(func) {}
+    template <typename Func> ScopeGuard(const Func& func) : commit_(false), func_(func) {}
+    ~ScopeGuard() { if (!commit_) func_(); }
+    void commit() const noexcept { commit_ = true; }
+    ScopeGuard(ScopeGuard&& other) : commit_(other.commit_), func_(other.func_) { other.commit(); }
+    private:
+    mutable bool commit_;
+    std::function<void()> func_;
+    ScopeGuard& operator=(const ScopeGuard&) = delete;
+};
+
 int main() {
     Storage S;
     Index I;
-    class StorageGuard {
-        public:
-        StorageGuard(Storage& S) : S_(S), commit_(false) {}
-        ~StorageGuard() { if (!commit_) S_.undo(); }
-        void commit() noexcept { commit_ = true; }
-        private:
-        Storage& S_;
-        bool commit_;
-        StorageGuard(const StorageGuard&) = delete;
-        StorageGuard& operator=(const StorageGuard&) = delete;
-    };
     try {
         S.insert(42, SUCCESS);
-        StorageGuard SG(S);
+        ScopeGuard SG([&] { S.undo(); });
         I.insert(42, FAIL_THROW);
         SG.commit();
     } catch (...) {
