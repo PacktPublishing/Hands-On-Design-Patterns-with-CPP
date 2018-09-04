@@ -20,6 +20,7 @@ class Storage {
     int i_;
     int i1_;
 };
+void undo(Storage& S) { S.undo(); }
 
 // Demo memory index, does nothing useful but may throw exception.
 class Index {
@@ -40,34 +41,35 @@ class Index {
     int i1_;
 };
 
-class ScopeGuardBase {
+class ScopeGuardImplBase {
     public:
-    ScopeGuardBase() : commit_(false) {}
+    ScopeGuardImplBase() : commit_(false) {}
     void commit() const noexcept { commit_ = true; }
 
     protected:
-    ScopeGuardBase(ScopeGuardBase&& other) : commit_(other.commit_) { other.commit(); }
-    ~ScopeGuardBase() {}
+    ScopeGuardImplBase(ScopeGuardImplBase&& other) : commit_(other.commit_) { other.commit(); }
+    ~ScopeGuardImplBase() {}
     mutable bool commit_;
 
     private:
-    ScopeGuardBase& operator=(const ScopeGuardBase&) = delete;
+    ScopeGuardImplBase& operator=(const ScopeGuardImplBase&) = delete;
 };
+typedef const ScopeGuardImplBase& ScopeGuard;
 
-template <typename Func>
-class ScopeGuard : public ScopeGuardBase {
+template <typename Func, typename Arg>
+class ScopeGuardImpl : public ScopeGuardImplBase {
     public:
-    ScopeGuard(Func&& func) : func_(std::move(func)) {}
-    ScopeGuard(const Func& func) : func_(func) {}
-    ~ScopeGuard() { if (!commit_) func_(); }
-    ScopeGuard(ScopeGuard&& other) : ScopeGuardBase(std::move(other)), func_(other.func_) {}
+    ScopeGuardImpl(const Func& func, Arg& arg) : func_(func), arg_(arg) {}
+    ~ScopeGuardImpl() { if (!commit_) func_(arg_); }
+    ScopeGuardImpl(ScopeGuardImpl&& other) : ScopeGuardImplBase(std::move(other)), func_(other.func_), arg_(other.arg_) {}
     private:
-    Func func_;
+    const Func& func_;
+    Arg& arg_;
 };
 
-template <typename Func>
-ScopeGuard<Func> MakeGuard(Func&& func) {
-    return ScopeGuard<Func>(std::forward<Func>(func));
+template <typename Func, typename Arg>
+auto MakeGuard(const Func& func, Arg& arg) {
+    return ScopeGuardImpl<Func, Arg>(func, arg);
 }
 
 int main() {
@@ -75,7 +77,7 @@ int main() {
     Index I;
     try {
         S.insert(42, SUCCESS);
-        auto SG = MakeGuard([&] { S.undo(); });
+        ScopeGuard SG = MakeGuard(undo, S);
         I.insert(42, FAIL_THROW);
         SG.commit();
     } catch (...) {
