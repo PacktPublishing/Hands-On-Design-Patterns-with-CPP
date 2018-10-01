@@ -16,7 +16,7 @@ class SortedCollection : public Collection {
     public:
     SortedCollection() {}
     SortedCollection(const Collection&) {}
-    virtual SortedCollection filter() { cout << "SortedCollection::filter" << endl; return *this; }
+    virtual SortedCollection filter() { cout << "SortedCollection::filter" << endl; return *this; }     // Not covariant return type, will not compile!
     SortedCollection search() { cout << "SortedCollection::search" << endl; return *this; }
     SortedCollection median() { cout << "SortedCollection::median" << endl; return *this; }
 };

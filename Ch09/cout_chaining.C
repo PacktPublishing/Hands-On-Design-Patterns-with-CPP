@@ -4,7 +4,7 @@ using std::cout;
 using std::endl;
 
 int main() {
-    int i, j;
+    int i = 0, j = 0;
     auto& out1 = cout.operator<<(i);
     out1.operator<<(j);
 }
