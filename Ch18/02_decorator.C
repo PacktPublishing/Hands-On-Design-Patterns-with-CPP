@@ -1,4 +1,4 @@
-// Basic decorator
+// CRTP decorator
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -17,10 +17,12 @@ class Unit {
 
 class Knight : public Unit {
     public:
-    using Unit::Unit;
-    double attack() { return strength_ + sword_bonus_; }
+    Knight(double strength, double armor) : Unit(strength, armor), charge_bonus_(0) {}
+    double attack() { double res = strength_ + sword_bonus_ + charge_bonus_; charge_bonus_ = 0; return res; }
     double defense() { return armor_ + plate_bonus_; }
+    void charge() { charge_bonus_ = 1; }
     protected:
+    double charge_bonus_;
     static constexpr double sword_bonus_ = 2;
     static constexpr double plate_bonus_ = 3;
 };
@@ -45,25 +47,29 @@ class Troll : public Unit {
     static constexpr double hide_bonus_ = 8;
 };
 
-class VeteranUnit : public Unit {
+template <typename U> class VeteranUnit : public U {
     public:
-    VeteranUnit(Unit& unit, double strength_bonus, double armor_bonus) : Unit(strength_bonus, armor_bonus), unit_(unit) {}
-    double attack() { return unit_.attack() + strength_; }
-    double defense() { return unit_.defense() + armor_; }
+    VeteranUnit(U&& unit, double strength_bonus, double armor_bonus) : U(unit), strength_bonus_(strength_bonus), armor_bonus_(armor_bonus) {}
+    double attack() { return U::attack() + strength_bonus_; }
+    double defense() { return U::defense() + armor_bonus_; }
     private:
-    Unit& unit_;
+    double strength_bonus_;
+    double armor_bonus_;
 };
 
 int main() {
     Knight k(10, 5);
     Ogre o(12, 2);
+    k.charge();
     cout << "Knight hits Ogre: " << k.hit(o) << endl;
     Troll t(14, 10);
     cout << "Knight hits Troll: " << k.hit(t) << endl;
-    VeteranUnit vk(k, 7, 2);
+    VeteranUnit<Knight> vk(std::move(k), 7, 2);
     cout << "Veteran Knight hits Troll: " << vk.hit(t) << endl;
-    VeteranUnit vo(o, 1, 9);
+    VeteranUnit<Ogre> vo(std::move(o), 1, 9);
     cout << "Veteran Knight hits Veteran Ogre: " << vk.hit(vo) << endl;
-    VeteranUnit vvo(vo, 1, 9);
+    VeteranUnit<VeteranUnit<Ogre>> vvo(std::move(vo), 1, 9);
+    cout << "Veteran Knight hits Veteran2 Ogre: " << vk.hit(vvo) << endl;
+    vk.charge();
     cout << "Veteran Knight hits Veteran2 Ogre: " << vk.hit(vvo) << endl;
 }
