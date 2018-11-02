@@ -1,6 +1,7 @@
 // 02 with dynamic memory allocation
 #include <iostream>
 #include <memory>
+#include <cassert>
 using std::cout;
 using std::endl;
 
@@ -50,15 +51,24 @@ class Troll : public Unit {
     static constexpr double hide_bonus_ = 8;
 };
 
+template <typename To, typename From> static std::unique_ptr<To> move_cast(std::unique_ptr<From>& p) {
+#ifndef NDEBUG
+    auto p1 = std::unique_ptr<To>(dynamic_cast<To*>(p.release()));
+    assert(p1);
+    return p1;
+#else 
+    return std::unique_ptr<To>(static_cast<To*>(p.release()));
+#endif
+}
+
 template <typename U> class VeteranUnit : public U {
     public:
-    template <typename P> VeteranUnit(P&& p, double strength_bonus, double armor_bonus) : U(*move_cast<U>(p)), strength_bonus_(strength_bonus), armor_bonus_(armor_bonus) {}
+    template <typename P> VeteranUnit(P&& p, double strength_bonus, double armor_bonus) : U(std::move(*move_cast<U>(p))), strength_bonus_(strength_bonus), armor_bonus_(armor_bonus) {}
     double attack() { return U::attack() + strength_bonus_; }
     double defense() { return U::defense() + armor_bonus_; }
     private:
     double strength_bonus_;
     double armor_bonus_;
-    template <typename To, typename From> static std::unique_ptr<To> move_cast(std::unique_ptr<From>& p) { return std::unique_ptr<To>(static_cast<To*>(p.release())); }
 };
 
 
@@ -78,4 +88,8 @@ int main() {
     cout << "Veteran Knight hits Veteran2 Ogre: " << vk->hit(*vvo) << endl;
     vk->charge();
     cout << "Veteran Knight hits Veteran2 Ogre: " << vk->hit(*vvo) << endl;
+    {
+    Unit_ptr k(new Knight(10, 5));
+    Unit_ptr vk(new VeteranUnit<Ogre>(k, 7, 2));
+    }
 }

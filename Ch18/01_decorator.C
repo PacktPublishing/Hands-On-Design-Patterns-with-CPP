@@ -3,7 +3,6 @@
 using std::cout;
 using std::endl;
 
-// Basic decorator
 class Unit {
     public:
     Unit(double strength, double armor) : strength_(strength), armor_(armor) {}

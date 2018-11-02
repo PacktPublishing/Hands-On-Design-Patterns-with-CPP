@@ -6,7 +6,8 @@ using std::cout;
 using std::endl;
 
 struct much_less {
-    template <typename T> bool operator()(T x, T y) { return x < y && std::abs(x - y) > 0.2*std::max(std::abs(x), std::abs(y)); }
+    template <typename T> bool operator()(T x, T y) { return x < y && std::abs(x - y) > tolerance*std::max(std::abs(x), std::abs(y)); }
+    static constexpr double tolerance = 0.2;
 };
 
 template<typename RandomIt> void sort_much_less(RandomIt first, RandomIt last) {

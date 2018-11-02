@@ -26,11 +26,7 @@ template <typename V> class Comparable : public V {
     typedef typename value_type::basic_type basic_type;
     Comparable(value_type v) : V(v) {}
     friend bool operator==(Comparable lhs, Comparable rhs) { return lhs.val_ == rhs.val_; }
-    //friend bool operator==(value_type lhs, Comparable rhs) { return Comparable(lhs).val_ == rhs.val_; }
-    //friend bool operator==(Comparable lhs, value_type rhs) { return lhs.val_ == Comparable(rhs).val_; }
     friend bool operator!=(Comparable lhs, Comparable rhs) { return lhs.val_ != rhs.val_; }
-    //friend bool operator!=(value_type lhs, Comparable rhs) { return Comparable(lhs).val_ != rhs.val_; }
-    //friend bool operator!=(Comparable lhs, value_type rhs) { return lhs.val_ != Comparable(rhs).val_; }
     friend bool operator==(Comparable lhs, basic_type rhs) { return lhs.val_ == rhs; }
     friend bool operator==(basic_type lhs, Comparable rhs) { return lhs == rhs.val_; }
     friend bool operator!=(Comparable lhs, basic_type rhs) { return lhs.val_ != rhs; }

@@ -1,6 +1,7 @@
-// 04a with support for void
+// 04b with composable decorators
 #include <iostream>
 #include <string>
+#include <mutex>
 using std::cout;
 using std::endl;
 
@@ -27,8 +28,7 @@ template <typename Callable> class DebugDecorator {
     DebugDecorator(const Callable& c, const char* s) : c_(c), s_(s) {}
     template <typename ... Args> auto operator()(Args&& ... args) const {
         cout << "Invoking " << s_ << endl;
-        using Callable_ref = Callable&;
-        using res_t = typename std::result_of<Callable_ref(Args ...)>::type;
+        using res_t = typename std::result_of<Callable(Args ...)>::type;
         report<res_t> res(c_, std::forward<Args>(args) ...);
         return res();
     }
@@ -43,45 +43,37 @@ auto decorate_debug(const Callable& c, const char* s) {
     return DebugDecorator<Callable>(c, s);
 }
 
+template <typename Callable> class LockDecorator {
+    public:
+    LockDecorator(const Callable& c, std::mutex& m) : c_(c), m_(m) {}
+    template <typename ... Args> auto operator()(Args&& ... args) const {
+        std::lock_guard<std::mutex> l(m_);
+        return c_(std::forward<Args>(args) ...);
+    }
+
+    private:
+    const Callable& c_;
+    std::mutex& m_;
+};
+
+template <typename Callable>
+auto decorate_lock(const Callable& c, std::mutex& m) {
+    return LockDecorator<Callable>(c, m);
+}
+
 struct R {
     int value() const { return rand(); }
 };
 
-int g(int i, int j) { return i - j; }
-
-struct S {
-    double operator()() const { return double(rand() + 1)/double(rand() + 1); }
-};
-
-double x = 0;
-double& fx() { return x; }
-const double& cfx() { return x; }
-
 int main() {
-    auto f1 = decorate_debug([](int i) { return i; }, "i->i");
+    std::mutex m;
+    auto f1 = decorate_lock(decorate_debug([](int i) { return i; }, "i->i"), m);
     f1(5);
-
-    auto f2 = decorate_debug([](int i, int j) { return i + j; }, "i+j");
+    auto f2 = decorate_debug(decorate_lock([](int i, int j) { return i + j; }, m), "i+j");
     f2(5, 3);
-
-    auto g1 = decorate_debug(g, "g()");
-    g1(5, 2);
-
-    S s;
-    auto s1 = decorate_debug(s, "rand/rand");
-    s1(); s1();
-
     R r;
-    auto f0 = decorate_debug([&]() { return r.value(); }, "rand");
+    auto f0 = decorate_lock([&]() { return r.value(); }, m);
     f0(); f0();
-
-    auto fx1 = decorate_debug(fx, "fx()");
-    fx() = 1; cout << "x=" << x << endl;
-    //fx1() = 5; cout << "x=" << x << endl; // This is tricky but possible
-
-    auto cfx1 = decorate_debug(cfx, "cfx()");
-    cfx1();
-
     auto incr = decorate_debug([](int& x) { ++x; }, "++x");
     int i = 0;
     incr(i);

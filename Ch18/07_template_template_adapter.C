@@ -35,6 +35,7 @@ template <typename T> class vector1 : public std::vector<T> {
     using base_t = std::vector<T>;
     public:
     using base_t::base_t;
+    //using std::vector<T>::vector;     // This works too
 };
 //template <typename T> using vector1 = std::vector<T>; // Not deduced by template deduction!
 

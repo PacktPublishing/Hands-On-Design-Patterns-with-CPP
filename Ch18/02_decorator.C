@@ -72,4 +72,5 @@ int main() {
     cout << "Veteran Knight hits Veteran2 Ogre: " << vk.hit(vvo) << endl;
     vk.charge();
     cout << "Veteran Knight hits Veteran2 Ogre: " << vk.hit(vvo) << endl;
+    //VeteranUnit<VeteranUnit<Knight>> vvk(vk, 7, 2); // Does not compile!
 }

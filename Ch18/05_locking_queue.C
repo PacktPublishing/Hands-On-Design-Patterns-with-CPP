@@ -21,7 +21,7 @@ template <typename T> class locking_queue {
     bool pop(value_type& value) {
         lock_guard l(m_);
         if (q_.empty()) return false;
-        value = q_.front();
+        value = std::move(q_.front());
         q_.pop();
         return true;
     }

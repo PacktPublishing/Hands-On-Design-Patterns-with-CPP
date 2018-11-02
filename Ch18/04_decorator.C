@@ -77,18 +77,31 @@ template <> struct report<void> {
     void operator()() {}
 };
 
+template <typename T, T v0> struct initialized_value {
+    T v;
+    initialized_value() : v(v0) {}
+};
+
 template <typename U> class DebugDecorator : public U {
+    initialized_value<bool, true> decorated_;
     public:
     using U::U;
     template <typename Func, typename ... Args> auto operator()(Func func, Args&& ... args) {
         int status; char buf[1024]; size_t len = sizeof(buf);
         cout << "Invoking " << typeid(func).name() << " " << abi::__cxa_demangle(typeid(func).name(), buf, &len, &status) << endl;
         //auto res = (this->*func)(args ...); // Only if func() does not return void!
-        using res_t = typename std::result_of<decltype(func)(DebugDecorator*, Args ...)>::type;
+        using res_t = typename std::result_of<decltype(func)(U*, Args ...)>::type;
         report<res_t> rep(this, func, std::forward<Args>(args) ...);
         return rep();
     }
-    double attack() { double res = U::attack(); cout << "Attack: " << res << endl; return res; }
+    template <typename Func, typename ... Args> auto invoke(const char* s, Func func, Args&& ... args) {
+        cout << s << " ";
+        using res_t = typename std::result_of<decltype(func)(U*, Args ...)>::type;
+        report<res_t> rep(this, func, std::forward<Args>(args) ...);
+        return rep();
+    }
+    double attack() { return invoke("Attack", &U::attack); } // Infinite loop!
+    //double attack() { double res = U::attack(); cout << "Attack: " << res << endl; return res; }
     double defense() { double res = U::defense(); cout << "Defense: " << res << endl; return res; }
 };
 

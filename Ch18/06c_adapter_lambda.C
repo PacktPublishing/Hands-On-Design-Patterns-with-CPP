@@ -1,4 +1,4 @@
-// 06 with container adapter
+// 06a using lambda
 #include <algorithm>
 #include <vector>
 #include <iostream>
@@ -10,9 +10,7 @@ struct much_less {
     static constexpr double tolerance = 0.2;
 };
 
-template<typename Container> void sort_much_less(Container& c) {
-    std::sort(c.begin(), c.end(), much_less());
-}
+auto sort_much_less = [](auto& container) { return std::sort(container.begin(), container.end(), much_less()); };
 
 int main() {
     const size_t N = 20;

@@ -50,11 +50,19 @@ class Troll : public Unit {
     static constexpr double hide_bonus_ = 8;
 };
 
-template <typename To, typename From> static std::unique_ptr<To> move_cast(std::unique_ptr<From>& p) { return std::unique_ptr<To>(static_cast<To*>(p.release())); }
+template <typename To, typename From> static std::unique_ptr<To> move_cast(std::unique_ptr<From>& p) {
+#ifndef NDEBUG
+    auto p1 = std::unique_ptr<To>(dynamic_cast<To*>(p.release()));
+    assert(p1);
+    return p1;
+#else 
+    return std::unique_ptr<To>(static_cast<To*>(p.release()));
+#endif
+}
 
 template <typename U> class VeteranUnit : public U {
     public:
-    template <typename P> VeteranUnit(P&& p, double strength_bonus, double armor_bonus) : U(*move_cast<U>(p)), strength_bonus_(strength_bonus), armor_bonus_(armor_bonus) {}
+    template <typename P> VeteranUnit(P&& p, double strength_bonus, double armor_bonus) : U(std::move(*move_cast<U>(p))), strength_bonus_(strength_bonus), armor_bonus_(armor_bonus) {}
     double attack() { return U::attack() + strength_bonus_; }
     double defense() { return U::defense() + armor_bonus_; }
     private:
@@ -65,7 +73,7 @@ template <typename U> class VeteranUnit : public U {
 template <typename U> class DebugDecorator : public U {
     public:
     using U::U;
-    template <typename P> DebugDecorator(P&& p) : U(*move_cast<U>(p)) {}
+    template <typename P> DebugDecorator(P&& p) : U(std::move(*move_cast<U>(p))) {}
     double attack() { double res = U::attack(); cout << "Attack: " << res << endl; return res; }
     double defense() { double res = U::defense(); cout << "Defense: " << res << endl; return res; }
 };

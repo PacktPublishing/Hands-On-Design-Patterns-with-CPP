@@ -23,7 +23,7 @@ template <typename T> class locking_queue {
     std::pair<value_type, bool> pop() {
         lock_guard l(m_);
         if (q_.empty()) return { value_type(), false };
-        value_type value = q_.front();
+        value_type value = std::move(q_.front());
         q_.pop();
         return { value, true };
     }
