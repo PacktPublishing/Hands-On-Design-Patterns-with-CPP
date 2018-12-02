@@ -1,5 +1,6 @@
-// Basic visitor
+// 01 with polymorphic calls
 #include <iostream>
+#include <memory>
 
 class Cat;
 class Dog;
@@ -45,14 +46,14 @@ class PlayingVisitor : public PetVisitor {
 };
 
 int main() {
-    Cat c("orange");
-    Dog d("brown");
+    std::unique_ptr<Pet> c(new Cat("orange"));
+    std::unique_ptr<Pet> d(new Dog("brown"));
 
     FeedingVisitor fv;
-    c.accept(fv);
-    d.accept(fv);
+    c->accept(fv);
+    d->accept(fv);
 
     PlayingVisitor pv;
-    c.accept(pv);
-    d.accept(pv);
+    c->accept(pv);
+    d->accept(pv);
 }

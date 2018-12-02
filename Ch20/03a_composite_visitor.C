@@ -1,5 +1,6 @@
-// Basic visitor
+// Visitable composite (based on 01a)
 #include <iostream>
+#include <memory>
 
 class Cat;
 class Dog;
@@ -44,15 +45,26 @@ class PlayingVisitor : public PetVisitor {
     void visit(Dog* d) override { std::cout << "Play fetch with the " << d->color() << " dog" << std::endl; }
 };
 
+class Family {
+    public:
+    Family(const char* cat_color, const char* dog_color) :
+        cat_(cat_color), dog_(dog_color)
+    {}
+    void accept(PetVisitor& v) {
+        cat_.accept(v);
+        dog_.accept(v);
+    }
+    private:
+    Cat cat_;
+    Dog dog_;
+};
+
 int main() {
-    Cat c("orange");
-    Dog d("brown");
+    Family f("orange", "brown");
 
     FeedingVisitor fv;
-    c.accept(fv);
-    d.accept(fv);
+    f.accept(fv);
 
     PlayingVisitor pv;
-    c.accept(pv);
-    d.accept(pv);
+    f.accept(pv);
 }
