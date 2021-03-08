@@ -42,6 +42,15 @@ With the following software and hardware list you can run all code files present
 | 3,4 | Guidelines Support Library (GSL) | Windows, Mac OS X, and Linux |
 | 11 | Folly | Windows, Mac OS X, and Linux  |
 
+### Errata
+The code block at page 43 _should be_ as follows:
+```
+Group<int, long> g(3, 5);
+int(g); // 3
+long(g); // 5
+
+```
+
 
 ### Related products
 * Hands-On System Programming with C++ [[Packt]](https://www.packtpub.com/application-development/hands-system-programming-c?utm_source=github&utm_medium=repository&utm_campaign=9781789137880 ) [[Amazon]](https://www.amazon.com/dp/1789137888)
