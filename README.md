@@ -43,12 +43,29 @@ With the following software and hardware list you can run all code files present
 | 11 | Folly | Windows, Mac OS X, and Linux  |
 
 ### Errata
-The code block at page 43 _should be_ as follows:
+* The code block at page 43 _should be_ as follows:
 ```
 Group<int, long> g(3, 5);
 int(g); // 3
 long(g); // 5
 
+```
+* Page 429: The first code block on this page should be as follows:
+```
+void Point::accept(Visitor& v){
+    v.visit(x_);    // double
+    v.visit(y_);    // double
+}
+
+void Circle::accept(Visitor& v){
+    v.visit(c_);    // Point
+    v.visit(r_);    // double
+}
+
+void Line::accept(Visitor& v){
+    v.visit(p1_);    // Point
+    v.visit(p2_);    // Point
+}
 ```
 
 
