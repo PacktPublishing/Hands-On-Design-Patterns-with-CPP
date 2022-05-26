@@ -1,3 +1,7 @@
+## [Get this title for $10 on Packt's Spring Sale](https://www.packt.com/B09734?utm_source=github&utm_medium=packt-github-repo&utm_campaign=spring_10_dollar_2022)
+-----
+For a limited period, all eBooks and Videos are only $10. All the practical content you need \- by developers, for developers
+
 # Hands-On Design Patterns with C++
 
 <a href="https://www.packtpub.com/application-development/hands-design-patterns-c?utm_source=github&utm_medium=repository&utm_campaign=9781788832564 "><img src="https://d255esdrn735hr.cloudfront.net/sites/default/files/imagecache/ppv4_main_book_cover/B09734_NEW.png" alt="Hands-On Design Patterns with C++" height="256px" align="right"></a>
