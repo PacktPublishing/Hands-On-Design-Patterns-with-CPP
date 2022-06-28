@@ -26,43 +26,28 @@ using PetVisitor = Visitor<class Cat, class Dog>;
 
 // ----------------------------------------------
 //
-#include <tuple>
 template <typename Base, typename ... >
 class LambdaVisitor;
 
-template <typename Base, typename F1>
-class LambdaVisitor<Base, std::tuple<F1>> : public Base, public F1 {
+template <typename Base, typename T1, typename F1>
+class LambdaVisitor<Base, Visitor<T1>, F1> : private F1, public Base {
     public:
-    using F1::operator();
     LambdaVisitor(F1&& f1) : F1(std::move(f1)) {}
     LambdaVisitor(const F1& f1) : F1(f1) {}
+    void visit(T1* t) override { return F1::operator()(t); }
 };
 
-template <typename Base, typename F1, typename ... F>
-class LambdaVisitor<Base, std::tuple<F1, F ...>> : public F1, public LambdaVisitor<Base, std::tuple<F ...>> {
+template <typename Base, typename T1, typename ... T, typename F1, typename ... F>
+class LambdaVisitor<Base, Visitor<T1, T ...>, F1, F ...> : private F1, public LambdaVisitor<Base, Visitor<T ...>, F ...> {
     public:
-    using F1::operator();
-    LambdaVisitor(F1&& f1, F&& ... f) : F1(std::move(f1)), LambdaVisitor<Base, std::tuple<F ...>>(std::forward<F>(f) ...) {}
-    LambdaVisitor(const F1& f1, F&& ... f) : F1(f1), LambdaVisitor<Base, std::tuple<F ...>>(std::forward<F>(f) ...) {}
-};
-
-template <typename Base, typename T1, typename ... F>
-class LambdaVisitor<Base, Visitor<T1>, std::tuple<F ...>> : public LambdaVisitor<Base, std::tuple<F ...>> {
-    public:
-    using LambdaVisitor<Base, std::tuple<F ...>>::LambdaVisitor;
-    void visit(T1* t) override { return this->operator()(t); }
-};
-
-template <typename Base, typename T1, typename ... T, typename ... F>
-class LambdaVisitor<Base, Visitor<T1, T ...>, std::tuple<F ...>> : public LambdaVisitor<Base, Visitor<T ...>, std::tuple<F ...>> {
-    public:
-    using LambdaVisitor<Base, Visitor<T ...>, std::tuple<F ...>>::LambdaVisitor;
-    void visit(T1* t) override { return this->operator()(t); }
+    LambdaVisitor(F1&& f1, F&& ... f) : F1(std::move(f1)), LambdaVisitor<Base, Visitor<T ...>, F ...>(std::forward<F>(f) ...) {}
+    LambdaVisitor(const F1& f1, F&& ... f) : F1(f1), LambdaVisitor<Base, Visitor<T ...>, F ...>(std::forward<F>(f) ...) {}
+    void visit(T1* t) override { return F1::operator()(t); }
 };
 
 template <typename Base, typename ... F>
 auto lambda_visitor(F&& ... f) {
-    return LambdaVisitor<Base, Base, std::tuple<F ...>>(std::forward<F>(f) ...);
+    return LambdaVisitor<Base, Base, F ...>(std::forward<F>(f) ...);
 }
 //
 // ----------------------------------------------
